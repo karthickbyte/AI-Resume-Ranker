@@ -1,0 +1,14 @@
+Job Title: Machine Learning Engineer
+Company: AI Ventures
+
+Required Skills:
+- Python
+- Machine Learning
+- Deep Learning
+- NLP
+- TensorFlow
+- SQL
+- Git
+
+Experience: 1-2 years
+Education: B.Tech Computer Science

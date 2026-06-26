@@ -1,0 +1,13 @@
+Job Title: Data Analyst
+Company: Analytics Corp
+
+Required Skills:
+- Python
+- Excel
+- Power BI
+- SQL
+- Data Visualization
+- Communication
+
+Experience: 0-2 years
+Education: B.Tech / BCA / B.Sc Statistics

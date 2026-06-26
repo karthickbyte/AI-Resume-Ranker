@@ -1,0 +1,18 @@
+Job Title: Python Developer
+Company: Tech Solutions Pvt Ltd
+
+Required Skills:
+- Python
+- SQL
+- Machine Learning
+- Communication Skills
+- Problem Solving
+
+Experience: 0-2 years
+Education: B.Tech Computer Science or related field
+
+Job Responsibilities:
+- Write clean Python code
+- Work with databases using SQL
+- Build machine learning models
+- Collaborate with team members
