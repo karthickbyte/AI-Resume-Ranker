@@ -98,3 +98,44 @@ def read_all_jds(jd_folder):
             all_jds.append(jd_data)
 
     return all_jds
+from sentence_transformers import SentenceTransformer, util
+
+# Load AI model once (takes 30 seconds first time)
+print("Loading AI model...")
+similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
+print("AI Model loaded! ✅")
+
+
+def calculate_similarity(resume_text, jd_text):
+    try:
+        # Convert text into numbers AI understands
+        resume_vector = similarity_model.encode(
+            resume_text, 
+            convert_to_tensor=True
+        )
+        jd_vector = similarity_model.encode(
+            jd_text, 
+            convert_to_tensor=True
+        )
+
+        # Calculate how similar they are
+        similarity = util.cos_sim(resume_vector, jd_vector)
+
+        # Convert to percentage
+        score = float(similarity) * 100
+        return round(score, 2)
+
+    except Exception as e:
+        print(f"Similarity error: {e}")
+        return 0.0
+
+
+def get_similarity_label(score):
+    if score >= 80:
+        return "🟢 Excellent Match"
+    elif score >= 60:
+        return "🟡 Good Match"
+    elif score >= 40:
+        return "🟠 Average Match"
+    else:
+        return "🔴 Poor Match"
