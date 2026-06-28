@@ -1,35 +1,50 @@
 import re
 import os
-from urllib import response
-from google import genai
-import os
 from dotenv import load_dotenv
+from google import genai
+from sentence_transformers import SentenceTransformer, util
 
+# Load .env file first
 load_dotenv()
 
+# Connect Gemini using .env key
 gemini_client = genai.Client(
-    api_key="AQ.Ab8RN6Iw0Gbo9JjalGyTS9p-kofkR40NdqvcE0i9vfUvduFZ7w"
+    api_key=os.getenv("GEMINI_API_KEY")
 )
 
-# Master skills list - AI will look for these in JD
+# Load similarity model
+print("Loading AI model...")
+similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
+print("AI Model loaded! ✅")
+
+# Master skills list
 SKILLS_LIST = [
     # Programming Languages
-    "python", "java", "javascript", "c++", "c#", "ruby",
-    "swift", "kotlin", "typescript", "php", "r",
+    "python", "java", "javascript", "c++", "c#",
+    "ruby", "swift", "kotlin", "typescript", "php",
 
     # Web Development
-    "html", "css", "react", "angular", "vue", "django",
-    "flask", "nodejs", "spring boot", "rest api",
+    "html", "css", "react", "angular", "vue",
+    "django", "flask", "nodejs", "spring boot",
+    "rest api", "api development",
 
     # Database
-    "sql", "mysql", "postgresql", "mongodb", "oracle",
-    "firebase", "redis",
+    "sql", "mysql", "postgresql", "mongodb",
+    "oracle", "firebase", "redis",
 
     # Data Science & ML
     "machine learning", "deep learning", "nlp",
     "tensorflow", "keras", "pytorch", "pandas",
     "numpy", "scikit-learn", "statistics",
     "data visualization", "tableau", "power bi",
+    "computer vision", "feature engineering",
+    "data preprocessing", "jupyter notebook",
+    "model deployment",
+
+    # Data Analysis
+    "data cleaning", "data analysis",
+    "business intelligence", "reporting",
+    "pivot tables",
 
     # Cloud & DevOps
     "aws", "azure", "google cloud", "docker",
@@ -39,30 +54,60 @@ SKILLS_LIST = [
     # Soft Skills
     "communication", "leadership", "problem solving",
     "teamwork", "time management", "critical thinking",
+    "analytical thinking", "attention to detail",
 
     # Tools
     "excel", "ms office", "jira", "figma",
-    "photoshop", "postman"
+    "photoshop", "postman",
+
+    # Other
+    "object oriented programming",
+    "data structures", "algorithms",
+    "unit testing", "agile", "scrum"
 ]
 
+# Learning resources
+LEARNING_RESOURCES = {
+    "python": "freeCodeCamp Python course on YouTube",
+    "java": "Java Programming by Tim Buchalka — Udemy",
+    "sql": "SQLZoo.net or W3Schools SQL — Free",
+    "machine learning": "Andrew Ng ML Course — Coursera Free Audit",
+    "deep learning": "fast.ai free course — fast.ai",
+    "nlp": "Hugging Face NLP Course — Free",
+    "tensorflow": "TensorFlow official tutorials — tensorflow.org",
+    "docker": "TechWorld with Nana Docker — YouTube",
+    "aws": "AWS Free Tier + FreeCodeCamp AWS — YouTube",
+    "git": "Git and GitHub crash course — YouTube",
+    "power bi": "Microsoft Power BI learning — Free",
+    "tableau": "Tableau Public free tutorials",
+    "react": "React official docs + Traversy Media YouTube",
+    "django": "Django for Beginners — Udemy",
+    "communication": "Toastmasters or Coursera Communication Course",
+    "leadership": "Leadership courses on Coursera — Free Audit",
+    "excel": "Excel for beginners — YouTube GCFGlobal",
+    "statistics": "Statistics by Khan Academy — Free",
+    "kubernetes": "Kubernetes tutorial — TechWorld YouTube",
+    "linux": "Linux command line basics — freeCodeCamp YouTube"
+}
+
+
+# =============================================
+# JD PARSER FUNCTIONS
+# =============================================
 
 def extract_skills_from_text(text):
     found_skills = []
     text_lower = text.lower()
-
     for skill in SKILLS_LIST:
         if skill.lower() in text_lower:
             if skill not in found_skills:
                 found_skills.append(skill)
-
     return found_skills
 
 
 def parse_job_description(jd_text):
-    # Extract required skills
     required_skills = extract_skills_from_text(jd_text)
 
-    # Extract job title
     job_title = "Not specified"
     for line in jd_text.split('\n'):
         line = line.strip()
@@ -70,7 +115,6 @@ def parse_job_description(jd_text):
             job_title = line.split(':', 1)[1].strip()
             break
 
-    # Extract experience
     experience = "Not specified"
     for line in jd_text.split('\n'):
         line = line.strip()
@@ -99,42 +143,32 @@ def read_jd_from_file(file_path):
 def read_all_jds(jd_folder):
     all_jds = []
     files = os.listdir(jd_folder)
-
     for file in sorted(files):
         if file.endswith('.txt'):
             path = f"{jd_folder}/{file}"
             jd_data = read_jd_from_file(path)
             jd_data['filename'] = file
             all_jds.append(jd_data)
-
     return all_jds
-from sentence_transformers import SentenceTransformer, util
 
-# Load AI model once (takes 30 seconds first time)
-print("Loading AI model...")
-similarity_model = SentenceTransformer('all-MiniLM-L6-v2')
-print("AI Model loaded! ✅")
 
+# =============================================
+# SIMILARITY FUNCTIONS
+# =============================================
 
 def calculate_similarity(resume_text, jd_text):
     try:
-        # Convert text into numbers AI understands
         resume_vector = similarity_model.encode(
-            resume_text, 
+            resume_text,
             convert_to_tensor=True
         )
         jd_vector = similarity_model.encode(
-            jd_text, 
+            jd_text,
             convert_to_tensor=True
         )
-
-        # Calculate how similar they are
         similarity = util.cos_sim(resume_vector, jd_vector)
-
-        # Convert to percentage
         score = float(similarity) * 100
         return round(score, 2)
-
     except Exception as e:
         print(f"Similarity error: {e}")
         return 0.0
@@ -149,35 +183,15 @@ def get_similarity_label(score):
         return "🟠 Average Match"
     else:
         return "🔴 Poor Match"
-    # Learning resources for missing skills
-LEARNING_RESOURCES = {
-    "python": "freeCodeCamp Python course on YouTube",
-    "java": "Java Programming by Tim Buchalka — Udemy",
-    "sql": "SQLZoo.net or W3Schools SQL — Free",
-    "machine learning": "Andrew Ng ML Course — Coursera Free Audit",
-    "deep learning": "fast.ai free course — fast.ai",
-    "nlp": "Hugging Face NLP Course — Free",
-    "tensorflow": "TensorFlow official tutorials — tensorflow.org",
-    "docker": "TechWorld with Nana Docker — YouTube",
-    "aws": "AWS Free Tier + FreeCodeCamp AWS — YouTube",
-    "git": "Git and GitHub crash course — YouTube",
-    "power bi": "Microsoft Power BI learning — Free",
-    "tableau": "Tableau Public free tutorials",
-    "react": "React official docs + Traversy Media YouTube",
-    "django": "Django for Beginners — Udemy",
-    "communication": "Toastmasters or Coursera Communication Course",
-    "leadership": "Leadership courses on Coursera — Free Audit",
-    "excel": "Excel for beginners — YouTube GCFGlobal",
-    "statistics": "Statistics by Khan Academy — Free",
-    "kubernetes": "Kubernetes tutorial — TechWorld with Nana YouTube",
-    "linux": "Linux command line basics — freeCodeCamp YouTube"
-}
 
+
+# =============================================
+# SKILL GAP FUNCTIONS
+# =============================================
 
 def analyze_skill_gap(resume_text, required_skills):
     matched_skills = []
     missing_skills = []
-
     resume_lower = resume_text.lower()
 
     for skill in required_skills:
@@ -186,7 +200,6 @@ def analyze_skill_gap(resume_text, required_skills):
         else:
             missing_skills.append(skill)
 
-    # Calculate percentages
     total = len(required_skills)
     if total > 0:
         match_percentage = (len(matched_skills) / total) * 100
@@ -213,7 +226,7 @@ def get_learning_suggestions(missing_skills):
         if skill_lower in LEARNING_RESOURCES:
             suggestions[skill] = LEARNING_RESOURCES[skill_lower]
         else:
-            suggestions[skill] = f"Search '{skill} tutorial' on YouTube or Udemy"
+            suggestions[skill] = f"Search '{skill} tutorial' on YouTube"
     return suggestions
 
 
@@ -229,16 +242,11 @@ def get_gap_label(match_percentage):
 
 
 def full_gap_analysis(resume_data, jd_data):
-    # Analyze skill gap
     gap = analyze_skill_gap(
         resume_data['full_text'],
         jd_data['required_skills']
     )
-
-    # Get learning suggestions
     suggestions = get_learning_suggestions(gap['missing_skills'])
-
-    # Get label
     label = get_gap_label(gap['match_percentage'])
 
     return {
@@ -252,18 +260,16 @@ def full_gap_analysis(resume_data, jd_data):
         "suggestions": suggestions,
         "label": label
     }
-from google import genai
 
-# Direct API key — paste your key here
-GEMINI_API_KEY = "paste_your_actual_key_here"
 
-gemini_client = genai.Client(api_key=GEMINI_API_KEY)
-
+# =============================================
+# GEMINI AI FUNCTIONS
+# =============================================
 
 def get_ai_feedback(resume_data, jd_data, gap_result):
     try:
         prompt = (
-            f"You are an HR recruiter.\n"
+            f"You are an expert HR recruiter.\n"
             f"Job: {jd_data['job_title']}\n"
             f"Candidate: {resume_data['name']}\n"
             f"Matched Skills: {', '.join(gap_result['matched_skills'])}\n"
@@ -275,7 +281,6 @@ def get_ai_feedback(resume_data, jd_data, gap_result):
             f"3. Top 3 Improvements\n"
             f"4. Recommendation: Recommend/Maybe/Reject"
         )
-
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
@@ -291,9 +296,8 @@ def get_quick_summary(name, score, match_percentage, label):
         prompt = (
             f"Candidate {name} has {match_percentage}% skill match "
             f"and {score}% similarity score. "
-            f"Write ONE sentence summary. Maximum 15 words."
+            f"Write ONE sentence summary. Maximum 15 words only."
         )
-
         response = gemini_client.models.generate_content(
             model="gemini-2.5-flash",
             contents=prompt
