@@ -5,7 +5,7 @@ import os
 SKILLS_LIST = [
     # Programming Languages
     "python", "java", "javascript", "c++", "c#", "ruby",
-    "swift", "kotlin", "typescript", "php", "r",
+    "swift", "kotlin", "typescript", "php", "r programming",
 
     # Web Development
     "html", "css", "react", "angular", "vue", "django",
@@ -139,3 +139,106 @@ def get_similarity_label(score):
         return "🟠 Average Match"
     else:
         return "🔴 Poor Match"
+    # Learning resources for missing skills
+LEARNING_RESOURCES = {
+    "python": "freeCodeCamp Python course on YouTube",
+    "java": "Java Programming by Tim Buchalka — Udemy",
+    "sql": "SQLZoo.net or W3Schools SQL — Free",
+    "machine learning": "Andrew Ng ML Course — Coursera Free Audit",
+    "deep learning": "fast.ai free course — fast.ai",
+    "nlp": "Hugging Face NLP Course — Free",
+    "tensorflow": "TensorFlow official tutorials — tensorflow.org",
+    "docker": "TechWorld with Nana Docker — YouTube",
+    "aws": "AWS Free Tier + FreeCodeCamp AWS — YouTube",
+    "git": "Git and GitHub crash course — YouTube",
+    "power bi": "Microsoft Power BI learning — Free",
+    "tableau": "Tableau Public free tutorials",
+    "react": "React official docs + Traversy Media YouTube",
+    "django": "Django for Beginners — Udemy",
+    "communication": "Toastmasters or Coursera Communication Course",
+    "leadership": "Leadership courses on Coursera — Free Audit",
+    "excel": "Excel for beginners — YouTube GCFGlobal",
+    "statistics": "Statistics by Khan Academy — Free",
+    "kubernetes": "Kubernetes tutorial — TechWorld with Nana YouTube",
+    "linux": "Linux command line basics — freeCodeCamp YouTube"
+}
+
+
+def analyze_skill_gap(resume_text, required_skills):
+    matched_skills = []
+    missing_skills = []
+
+    resume_lower = resume_text.lower()
+
+    for skill in required_skills:
+        if skill.lower() in resume_lower:
+            matched_skills.append(skill)
+        else:
+            missing_skills.append(skill)
+
+    # Calculate percentages
+    total = len(required_skills)
+    if total > 0:
+        match_percentage = (len(matched_skills) / total) * 100
+        gap_percentage = (len(missing_skills) / total) * 100
+    else:
+        match_percentage = 0
+        gap_percentage = 0
+
+    return {
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "match_percentage": round(match_percentage, 1),
+        "gap_percentage": round(gap_percentage, 1),
+        "total_required": total,
+        "total_matched": len(matched_skills),
+        "total_missing": len(missing_skills)
+    }
+
+
+def get_learning_suggestions(missing_skills):
+    suggestions = {}
+    for skill in missing_skills:
+        skill_lower = skill.lower()
+        if skill_lower in LEARNING_RESOURCES:
+            suggestions[skill] = LEARNING_RESOURCES[skill_lower]
+        else:
+            suggestions[skill] = f"Search '{skill} tutorial' on YouTube or Udemy"
+    return suggestions
+
+
+def get_gap_label(match_percentage):
+    if match_percentage >= 80:
+        return "🟢 Strong Candidate"
+    elif match_percentage >= 60:
+        return "🟡 Good Candidate"
+    elif match_percentage >= 40:
+        return "🟠 Average Candidate"
+    else:
+        return "🔴 Not Recommended"
+
+
+def full_gap_analysis(resume_data, jd_data):
+    # Analyze skill gap
+    gap = analyze_skill_gap(
+        resume_data['full_text'],
+        jd_data['required_skills']
+    )
+
+    # Get learning suggestions
+    suggestions = get_learning_suggestions(gap['missing_skills'])
+
+    # Get label
+    label = get_gap_label(gap['match_percentage'])
+
+    return {
+        "matched_skills": gap['matched_skills'],
+        "missing_skills": gap['missing_skills'],
+        "match_percentage": gap['match_percentage'],
+        "gap_percentage": gap['gap_percentage'],
+        "total_required": gap['total_required'],
+        "total_matched": gap['total_matched'],
+        "total_missing": gap['total_missing'],
+        "suggestions": suggestions,
+        "label": label
+    }
