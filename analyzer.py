@@ -1,11 +1,21 @@
 import re
 import os
+from urllib import response
+from google import genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+gemini_client = genai.Client(
+    api_key="AQ.Ab8RN6Iw0Gbo9JjalGyTS9p-kofkR40NdqvcE0i9vfUvduFZ7w"
+)
 
 # Master skills list - AI will look for these in JD
 SKILLS_LIST = [
     # Programming Languages
     "python", "java", "javascript", "c++", "c#", "ruby",
-    "swift", "kotlin", "typescript", "php", "r programming",
+    "swift", "kotlin", "typescript", "php", "r",
 
     # Web Development
     "html", "css", "react", "angular", "vue", "django",
@@ -242,3 +252,53 @@ def full_gap_analysis(resume_data, jd_data):
         "suggestions": suggestions,
         "label": label
     }
+from google import genai
+
+# Direct API key — paste your key here
+GEMINI_API_KEY = "paste_your_actual_key_here"
+
+gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+def get_ai_feedback(resume_data, jd_data, gap_result):
+    try:
+        prompt = (
+            f"You are an HR recruiter.\n"
+            f"Job: {jd_data['job_title']}\n"
+            f"Candidate: {resume_data['name']}\n"
+            f"Matched Skills: {', '.join(gap_result['matched_skills'])}\n"
+            f"Missing Skills: {', '.join(gap_result['missing_skills'])}\n"
+            f"Match: {gap_result['match_percentage']}%\n\n"
+            f"Give:\n"
+            f"1. Assessment (1 sentence)\n"
+            f"2. Top 3 Strengths\n"
+            f"3. Top 3 Improvements\n"
+            f"4. Recommendation: Recommend/Maybe/Reject"
+        )
+
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        return response.text
+
+    except Exception as e:
+        return f"AI feedback unavailable: {str(e)}"
+
+
+def get_quick_summary(name, score, match_percentage, label):
+    try:
+        prompt = (
+            f"Candidate {name} has {match_percentage}% skill match "
+            f"and {score}% similarity score. "
+            f"Write ONE sentence summary. Maximum 15 words."
+        )
+
+        response = gemini_client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        return response.text.strip()
+
+    except Exception as e:
+        return f"Summary unavailable: {str(e)}"
