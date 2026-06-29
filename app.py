@@ -50,23 +50,117 @@ with st.sidebar:
 
 # Two column layout
 col1, col2 = st.columns([1, 1])
-
-# Left column - JD Input
 with col1:
     st.subheader("📋 Job Description")
 
+    # Pre-loaded JD templates
+    jd_templates = {
+        "Select a Template": "",
+        "Python Developer": """Job Title: Python Developer
+Company: Tech Solutions Pvt Ltd
+
+Required Skills:
+- Python
+- SQL
+- Machine Learning
+- Communication
+- Problem Solving
+
+Experience: 0-2 years
+Education: B.Tech Computer Science""",
+
+        "Data Analyst": """Job Title: Data Analyst
+Company: Analytics Corp
+
+Required Skills:
+- Python
+- Excel
+- Power BI
+- SQL
+- Data Visualization
+- Communication
+
+Experience: 0-2 years
+Education: B.Tech / BCA / B.Sc""",
+
+        "Machine Learning Engineer": """Job Title: Machine Learning Engineer
+Company: AI Ventures
+
+Required Skills:
+- Python
+- Machine Learning
+- Deep Learning
+- NLP
+- TensorFlow
+- SQL
+- Git
+
+Experience: 1-2 years
+Education: B.Tech Computer Science""",
+
+        "Full Stack Developer": """Job Title: Full Stack Developer
+Company: Web Solutions
+
+Required Skills:
+- Python
+- Django
+- React
+- SQL
+- HTML
+- CSS
+- Git
+
+Experience: 0-2 years
+Education: B.Tech Computer Science""",
+
+        "Data Scientist": """Job Title: Data Scientist
+Company: Data Corp
+
+Required Skills:
+- Python
+- Machine Learning
+- Statistics
+- SQL
+- Deep Learning
+- Communication
+
+Experience: 1-2 years
+Education: B.Tech Computer Science"""
+    }
+
     jd_input_method = st.radio(
         "How to add JD?",
-        ["Type or Paste", "Upload Text File"],
+        ["Use Template", "Type or Paste", "Upload Text File"],
         horizontal=True
     )
 
     jd_text = ""
 
-    if jd_input_method == "Type or Paste":
+    if jd_input_method == "Use Template":
+        selected_template = st.selectbox(
+            "Select Job Role Template",
+            list(jd_templates.keys())
+        )
+
+        if selected_template != "Select a Template":
+            # Single text area with template loaded
+            jd_text = st.text_area(
+                "JD loaded — edit if needed:",
+                value=jd_templates[selected_template],
+                height=250,
+                key="template_box"
+            )
+            st.success(f"✅ Template loaded: {selected_template}")
+        else:
+            st.info("👆 Please select a job role")
+            jd_text = ""
+
+    elif jd_input_method == "Type or Paste":
+        # Single text area only
         jd_text = st.text_area(
             "Paste Job Description here",
             height=250,
+            key="paste_box",
             placeholder="""Job Title: Python Developer
 Required Skills:
 - Python
@@ -79,7 +173,8 @@ Experience: 0-2 years"""
     else:
         jd_file = st.file_uploader(
             "Upload JD (.txt file)",
-            type=['txt']
+            type=['txt'],
+            key="jd_uploader"
         )
         if jd_file:
             jd_text = jd_file.read().decode('utf-8')
@@ -87,8 +182,10 @@ Experience: 0-2 years"""
             st.text_area(
                 "JD Content:",
                 jd_text,
-                height=200
+                height=200,
+                key="upload_box"
             )
+
 
 # Right column - Resume Upload
 with col2:
@@ -97,7 +194,8 @@ with col2:
     uploaded_resumes = st.file_uploader(
         "Upload PDF resumes (multiple allowed)",
         type=['pdf'],
-        accept_multiple_files=True
+        accept_multiple_files=True,
+        key="resume_uploader"
     )
 
     if uploaded_resumes:
