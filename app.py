@@ -266,6 +266,151 @@ if analyze_btn:
                         st.write(f"  • **{skill}:** {resource}")
 
         st.divider()
+        # =============================================
+        # CHARTS SECTION
+        # =============================================
+        st.subheader("📈 Score Comparison Chart")
+
+        import plotly.express as px
+        import plotly.graph_objects as go
+
+        # Bar chart data
+        chart_data = pd.DataFrame({
+            'Candidate': [r['name'] for r in results],
+            'Final Score': [r['final_score'] for r in results],
+            'Skill Match': [r['skill_match'] for r in results],
+            'Similarity': [r['similarity_score'] for r in results]
+        })
+
+        # Bar chart
+        fig = px.bar(
+            chart_data,
+            x='Candidate',
+            y=['Final Score', 'Skill Match', 'Similarity'],
+            barmode='group',
+            title='Candidate Score Comparison',
+            color_discrete_sequence=['#2196F3', '#4CAF50', '#FF9800']
+        )
+        fig.update_layout(
+            xaxis_tickangle=-45,
+            height=400
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+        st.divider()
+
+        # =============================================
+        # SKILL GAP CHART
+        # =============================================
+        st.subheader("🎯 Skill Match Overview")
+
+        col_chart1, col_chart2 = st.columns(2)
+
+        with col_chart1:
+            # Pie chart for recommendations
+            rec_counts = {
+                "Highly Recommended": len([r for r in results if r['final_score'] >= 80]),
+                "Recommended": len([r for r in results if 60 <= r['final_score'] < 80]),
+                "Maybe": len([r for r in results if 40 <= r['final_score'] < 60]),
+                "Not Recommended": len([r for r in results if r['final_score'] < 40])
+            }
+
+            fig_pie = px.pie(
+                values=list(rec_counts.values()),
+                names=list(rec_counts.keys()),
+                title='Candidate Distribution',
+                color_discrete_sequence=[
+                    '#4CAF50', '#2196F3', '#FF9800', '#F44336'
+                ]
+            )
+            st.plotly_chart(fig_pie, use_container_width=True)
+
+        with col_chart2:
+            # Horizontal bar for final scores
+            fig_bar = px.bar(
+                chart_data.sort_values('Final Score'),
+                x='Final Score',
+                y='Candidate',
+                orientation='h',
+                title='Final Score Ranking',
+                color='Final Score',
+                color_continuous_scale='RdYlGn'
+            )
+            fig_bar.update_layout(height=400)
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        st.divider()
+
+        # =============================================
+        # SUMMARY STATISTICS
+        # =============================================
+        st.subheader("📊 Summary Statistics")
+
+        total = len(results)
+        avg_score = sum(r['final_score'] for r in results) / total
+        highest = results[0]
+        lowest = results[-1]
+
+        stat1, stat2, stat3, stat4 = st.columns(4)
+
+        stat1.metric(
+            "Total Candidates",
+            total
+        )
+        stat2.metric(
+            "Average Score",
+            f"{round(avg_score, 1)}%"
+        )
+        stat3.metric(
+            "Best Score",
+            f"{highest['final_score']}%",
+            f"{highest['name']}"
+        )
+        stat4.metric(
+            "Lowest Score",
+            f"{lowest['final_score']}%",
+            f"{lowest['name']}"
+        )
+
+        st.divider()
+
+        # =============================================
+        # SKILL GAP TABLE
+        # =============================================
+        st.subheader("🔍 Skill Gap Analysis")
+
+        # Show skills heatmap
+        all_skills = jd_data['required_skills']
+        skill_data = []
+
+        for r in results:
+            row = {'Candidate': r['name']}
+            for skill in all_skills:
+                if skill in r['matched_skills']:
+                    row[skill] = '✅'
+                else:
+                    row[skill] = '❌'
+            skill_data.append(row)
+
+        skill_df = pd.DataFrame(skill_data)
+        st.dataframe(skill_df, use_container_width=True)
+
+        st.divider()
+
+        # =============================================
+        # LEARNING SUGGESTIONS
+        # =============================================
+        st.subheader("📚 Learning Recommendations")
+
+        for r in results:
+            if r['missing_skills']:
+                with st.expander(
+                    f"📖 {r['name']} — {len(r['missing_skills'])} skills to learn"
+                ):
+                    for skill, resource in r['suggestions'].items():
+                        st.write(f"**{skill}:** {resource}")
+
+        st.divider()
 
         # =============================================
         # DOWNLOAD RESULTS
