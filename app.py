@@ -7,6 +7,86 @@ from analyzer import read_jd_from_file, parse_job_description
 from resume_parser import parse_resume
 from ranking import rank_all_resumes, analyze_single_resume
 
+# =============================================
+# LOGIN SYSTEM
+# =============================================
+
+# Valid credentials
+USERS = {
+    "admin": "admin123",
+    "hr": "hr123",
+    "recruiter": "recruit123"
+}
+
+def check_login(username, password):
+    if username in USERS:
+        if USERS[username] == password:
+            return True
+    return False
+
+def show_login_page():
+    st.title("🤖 AI Resume Ranker")
+    st.subheader("Please login to continue")
+    st.divider()
+
+    col1, col2, col3 = st.columns([1, 2, 1])
+
+    with col2:
+        st.markdown("### 🔐 Login")
+
+        username = st.text_input(
+            "Username",
+            placeholder="Enter username",
+            key="login_username"
+        )
+
+        password = st.text_input(
+            "Password",
+            type="password",
+            placeholder="Enter password",
+            key="login_password"
+        )
+
+        login_btn = st.button(
+            "Login",
+            type="primary",
+            use_container_width=True
+        )
+
+        if login_btn:
+            if check_login(username, password):
+                st.session_state['logged_in'] = True
+                st.session_state['username'] = username
+                st.rerun()
+            else:
+                st.error("❌ Wrong username or password!")
+
+        st.divider()
+        st.markdown("**Demo Credentials:**")
+        st.info("""
+        Username: admin  Password: admin123
+        Username: hr     Password: hr123
+        """)
+
+# =============================================
+# CHECK LOGIN STATUS
+# =============================================
+if 'logged_in' not in st.session_state:
+    st.session_state['logged_in'] = False
+
+if not st.session_state['logged_in']:
+    show_login_page()
+    st.stop()
+
+# =============================================
+# SHOW LOGOUT IN SIDEBAR
+# =============================================
+with st.sidebar:
+    st.markdown(f"👤 Logged in as: **{st.session_state['username']}**")
+    if st.button("🚪 Logout"):
+        st.session_state['logged_in'] = False
+        st.rerun()
+    st.divider()
 # Load environment variables
 load_dotenv()
 
@@ -26,24 +106,27 @@ st.divider()
 # SIDEBAR
 # =============================================
 with st.sidebar:
-    st.image("https://img.icons8.com/color/96/artificial-intelligence.png")
     st.title("About This App")
     st.markdown("""
     This AI tool helps HR recruiters:
     - 📄 Read and parse resumes
-    - 🎯 Match candidates to job descriptions
-    - 📊 Rank candidates by fit score
+    - 🎯 Match candidates to JD
+    - 📊 Rank candidates by score
     - ❌ Find skill gaps
     - 📚 Suggest learning resources
-    - 🤖 Get AI powered feedback
     """)
     st.divider()
-    st.markdown("**Built with:**")
-    st.markdown("- Python")
-    st.markdown("- Streamlit")
-    st.markdown("- Gemini AI")
-    st.markdown("- Sentence Transformers")
 
+    st.markdown("**How to Use:**")
+    st.markdown("1. Add Job Description")
+    st.markdown("2. Upload PDF Resumes")
+    st.markdown("3. Click Analyze button")
+    st.markdown("4. See ranked results!")
+    st.divider()
+
+    st.markdown("**Built by:**")
+    st.markdown("Karthick J")
+    st.markdown("AI-Powered Resume Ranker")
 # =============================================
 # MAIN CONTENT
 # =============================================
